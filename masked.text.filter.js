@@ -2,12 +2,13 @@
     'use strict';
 
     angular
-        .module("yourapp")
-        .filter('tel', tel)
-        .filter('email', email);
+        .module('app', [])
+        .filter('maskedtel', maskedtel)
+        .filter('maskedemail', maskedemail)
+        .filter('maskedusername', maskedusername);
 
-    function tel() {
-        return function (tel, masked) {
+    function maskedtel() {
+        return function (tel) {
             if (!tel) { return ''; }
 
             var value = tel.toString().trim().replace(/^\+/, '');
@@ -31,13 +32,9 @@
                     number = value.slice(4);
                     break;
 
-                case 12: // +CCCPP####### -> CCC (PP) ###-####
-                    country = value.slice(0, 3);
-                    city = value.slice(3, 5);
-                    number = value.slice(5);
-                    break;
-
                 default:
+                    if (value.length <= 4) return 'xxx' + value.slice(value.length - 1);
+                    else return value.slice(0, value.length - 4).replace(/[0-9]/g, "x") + value.slice(value.length - 4);
                     return tel;
             }
 
@@ -45,14 +42,14 @@
                 country = "";
             }
 
-            number = (masked ? "xxx" : number.slice(0, 3)) + '-' + number.slice(3);
+            number = 'xxx-' + number.slice(3);
 
-            return (country + "(" + (masked ? "xxx" : city) + ") " + number).trim();
+            return (country.replace(/[0-9]/g, "x") + ' (xxx) ' + number).trim();
         };
     }
 
-    function email() {
-        return function (email, masked) {
+    function maskedemail() {
+        return function (email) {
             if (!email) { return ''; }
 
             var value = email.toString().trim().replace(/^\+/, '');
@@ -73,6 +70,20 @@
             }
 
             return maskedPrefix + suffix;
+        };
+    }
+
+    function maskedusername() {
+        return function (username, showLength) {
+            if (!username) { return ''; }
+            if (!showLength) showLength = 3;
+
+            var suffix = '';
+
+            if (username.length < showLength) suffix = username;
+            else suffix = username.slice(username.length - showLength);
+
+            return 'xxxxxxxxxxxx' + suffix;
         };
     }
 })();
